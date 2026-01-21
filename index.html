@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>00중학교 출석 관리 프로그램</title>
+  <style>
+    body {
+            background-color: #f0f2f5;
+            font-family: 'Pretendard', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 50px;
+            margin: 0;
+        }
+
+        h1 {
+            font-size: 2rem;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .filter-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .filter-btn {
+            padding: 10px 25px;
+            border: 1px solid #ccc;
+            border-radius: 25px;
+            background-color: white;
+            cursor: pointer;
+            font-weight: bold;
+            color: #666;
+            transition: all 0.3s;
+        }
+
+        .filter-btn.active {
+            background-color: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        .content-wrapper {
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        .count-text {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #444;
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        .student-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+
+        .student-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .student-info .name {
+            font-size: 1.2rem;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .student-info .class {
+            font-size: 0.9rem;
+            color: #888;
+        }
+
+        .status-badge {
+            padding: 5px 15px;
+            border-radius: 20px;
+            color: white;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+
+        .status-badge.출석 { background-color: #4caf50; }
+        .status-badge.지각 { background-color: #ffb300; }
+        .status-badge.결석 { background-color: #f44336; }
+  </style>
+</head>
+<body>
+  <h1>00중학교 출석 관리 프로그램</h1>
+
+    <div class="filter-container">
+        <button class="filter-btn active" onclick="filterStudents('전체')">전체</button>
+        <button class="filter-btn" onclick="filterStudents('출석')">출석</button>
+        <button class="filter-btn" onclick="filterStudents('지각')">지각</button>
+        <button class="filter-btn" onclick="filterStudents('결석')">결석</button>
+    </div>
+
+    <div class="content-wrapper">
+        <div id="student-count" class="count-text">총 0명</div>
+        <div id="student-grid" class="student-grid">
+            </div>
+    </div>
+
+    <script>
+        const serverStudents = [
+    {
+        id: "STU-001",
+        name: "김철수",
+        className: "1학년 3반",
+        status: "출석"
+    },
+    {
+        id: "STU-002",
+        name: "이영희",
+        className: "1학년 3반",
+        status: "출석"
+    },
+    {
+        id: "STU-003",
+        name: "박민수",
+        className: "2학년 1반",
+        status: "지각"
+    },
+    {
+        id: "STU-004",
+        name: "정수진",
+        className: "1학년 3반",
+        status: "출석"
+    },
+    {
+        id: "STU-005",
+        name: "최동현",
+        className: "2학년 1반",
+        status: "결석"
+    },
+    {
+        id: "STU-006",
+        name: "한지은",
+        className: "2학년 1반",
+        status: "출석"
+    },
+    {
+        id: "STU-007",
+        name: "윤서준",
+        className: "1학년 3반",
+        status: "지각"
+    },
+    {
+        id: "STU-008",
+        name: "강민지",
+        className: "2학년 1반",
+        status: "출석"
+    },
+    {
+        id: "STU-009",
+        name: "송하늘",
+        className: "1학년 3반",
+        status: "출석"
+    },
+    {
+        id: "STU-010",
+        name: "임도현",
+        className: "2학년 1반",
+        status: "지각"
+    },
+    {
+        id: "STU-011",
+        name: "오지훈",
+        className: "1학년 3반",
+        status: "결석"
+    },
+    {
+        id: "STU-012",
+        name: "류서연",
+        className: "2학년 1반",
+        status: "출석"
+    },
+    {
+        id: "STU-013",
+        name: "배준호",
+        className: "1학년 3반",
+        status: "출석"
+    },
+    {
+        id: "STU-014",
+        name: "신유나",
+        className: "2학년 1반",
+        status: "지각"
+    },
+    {
+        id: "STU-015",
+        name: "조현우",
+        className: "1학년 3반",
+        status: "출석"
+    },
+    {
+        id: "STU-016",
+        name: "홍서윤",
+        className: "2학년 1반",
+        status: "결석"
+    }
+];
+
+function renderStudents(students) {
+    const grid = document.getElementById('student-grid');
+    const countDisplay = document.getElementById('student-count');
+    
+    countDisplay.innerText = `총 ${students.length}명`;
+    
+    grid.innerHTML = students.map(student => `
+        <div class="student-card">
+            <div class="student-info">
+                <span class="name">${student.name}</span>
+                <span class="class">${student.className}</span>
+            </div>
+            <div class="status-badge ${student.status}">${student.status}</div>
+        </div>
+    `).join('');
+}
+
+function filterStudents(status) {
+    const buttons = document.querySelectorAll('.filter-btn');
+    buttons.forEach(btn => {
+        if(btn.innerText.includes(status)) btn.classList.add('active');
+        else btn.classList.remove('active');
+    });
+
+    if (status === '전체') {
+        renderStudents(serverStudents);
+    } else {
+        const filtered = serverStudents.filter(s => s.status === status);
+        renderStudents(filtered);
+    }
+}
+
+// 초기 화면 설정
+renderStudents(serverStudents);
+    </script>
+</body>
+</html>
